@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>NIHONGO CLUB HIRAGANA TES 🇯🇵</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#e8f5e9;text-align:center;padding:20px}
+    .container{background:#fff;padding:30px;border-radius:15px;box-shadow:0 0 10px rgba(0,0,0,.1);max-width:420px;margin:auto}
+    h1{color:green}
+    .hiragana{font-size:60px;color:#000;margin:20px 0}
+    input{padding:10px;width:80%;font-size:16px}
+    button{margin-top:10px;padding:10px 20px;font-size:16px;background:green;color:#fff;border:none;border-radius:5px;cursor:pointer}
+    .timer{margin-top:10px;font-weight:bold}
+  </style>
+</head>
+<body>
+  <div class="container" id="box">
+    <h1>NIHONGO CLUB HIRAGANA TES 🇯🇵</h1>
+    <p>Huruf ini dibaca apa?</p>
+    <div class="hiragana" id="question"></div>
+    <input type="text" id="answer" placeholder="Ketik jawaban...">
+    <br>
+    <button id="submitBtn">Jawab</button>
+    <p class="timer">Waktu: <span id="time">0</span> detik</p>
+    <p>🔥 Streak: <span id="streak">0</span></p>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const hiraganaList=[
+{char:"あ",romaji:"a"},{char:"い",romaji:"i"},{char:"う",romaji:"u"},{char:"え",romaji:"e"},{char:"お",romaji:"o"},
+{char:"か",romaji:"ka"},{char:"き",romaji:"ki"},{char:"く",romaji:"ku"},{char:"け",romaji:"ke"},{char:"こ",romaji:"ko"},
+{char:"さ",romaji:"sa"},{char:"し",romaji:"shi"},{char:"す",romaji:"su"},{char:"せ",romaji:"se"},{char:"そ",romaji:"so"},
+{char:"た",romaji:"ta"},{char:"ち",romaji:"chi"},{char:"つ",romaji:"tsu"},{char:"て",romaji:"te"},{char:"と",romaji:"to"},
+{char:"な",romaji:"na"},{char:"に",romaji:"ni"},{char:"ぬ",romaji:"nu"},{char:"ね",romaji:"ne"},{char:"の",romaji:"no"},
+{char:"は",romaji:"ha"},{char:"ひ",romaji:"hi"},{char:"ふ",romaji:"fu"},{char:"へ",romaji:"he"},{char:"ほ",romaji:"ho"},
+{char:"ま",romaji:"ma"},{char:"み",romaji:"mi"},{char:"む",romaji:"mu"},{char:"め",romaji:"me"},{char:"も",romaji:"mo"},
+{char:"や",romaji:"ya"},{char:"ゆ",romaji:"yu"},{char:"よ",romaji:"yo"},
+{char:"ら",romaji:"ra"},{char:"り",romaji:"ri"},{char:"る",romaji:"ru"},{char:"れ",romaji:"re"},{char:"ろ",romaji:"ro"},
+{char:"わ",romaji:"wa"},{char:"を",romaji:"wo"},{char:"ん",romaji:"n"}
+];
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+shuffle(hiraganaList);
+
+let currentIndex=0,correct=0,wrong=0,streak=0;
+let wrongList=[];
+let startTime=Date.now();
+let timerInterval;
+
+function updateTimer(){
+  const el=document.getElementById("time");
+  if(!el) return;
+  el.innerText=((Date.now()-startTime)/1000).toFixed(1);
+}
+
+function startTimer(){timerInterval=setInterval(updateTimer,100)}
+function stopTimer(){clearInterval(timerInterval)}
+
+function play(url){
+  try{const a=new Audio(url);a.play().catch(()=>{});}catch(e){console.log(e)}
+}
+
+function handleStreakSound(){
+  if(streak>=6 && streak<=20){
+    play("https://www.myinstants.com/media/sounds/jet-set-radio-spray-1.mp3");
+  } else if(streak>=21 && streak<=30){
+    play("https://www.myinstants.com/media/sounds/jet-set-radio-spray-2.mp3");
+  } else if(streak>=31 && streak<=40){
+    play("https://www.myinstants.com/media/sounds/jet-set-radio-spray-3.mp3");
+  } else if(streak>=41 && streak<=45){
+    play("https://www.myinstants.com/media/sounds/jet-set-radio-spray-4.mp3");
+  } else if(streak===46){
+    play("https://www.myinstants.com/media/sounds/jet-set-radio-success.mp3");
+  }
+}
+
+function loadQuestion(){
+  if(currentIndex<hiraganaList.length){
+    document.getElementById("question").innerText=hiraganaList[currentIndex].char;
+    document.getElementById("answer").value="";
+  }else{
+    endTest();
+  }
+}
+
+function submitAnswer(){
+  const input=document.getElementById("answer").value.toLowerCase();
+  const data=hiraganaList[currentIndex];
+
+  if(input===data.romaji){
+    correct++;streak++;
+    handleStreakSound();
+  }else{
+    wrong++;streak=0;
+    wrongList.push(`${data.char} (${data.romaji}) , yang kamu ketik ${input||'-'}`);
+  }
+
+  document.getElementById("streak").innerText=streak;
+  currentIndex++;
+  loadQuestion();
+}
+
+function getLevel(correct,wrong){
+  const levels=[
+    [0,"Dewa Matahari ☀️","Sudah hafal"],[2,"Dewa Langit 🌤️","Hampir sempurna"],[4,"Raja Bintang ⭐","Sangat hafal"],
+    [6,"Dewi Bulan 🌙","Sedikit hafal"],[8,"Ksatria 🌟","Lumayan hafal"],[10,"Petualang ⚔️","Masih belajar"],
+    [12,"Pelajar 📚","Perlu latihan"],[15,"Pemula 🐣","Baru mulai"],[18,"NPC 🧍","Kurang fokus"],
+    [22,"Zombie 🧟","Mulai lupa"],[26,"Bebek 🦆","Agak kacau"],[30,"Kucing 🐱","Random banget"],
+    [35,"Ayam 🐔","Belum stabil"],[40,"Kambing 🐐","Kacau"],[45,"Babi 🐷","Belum hafal"],[100,"Legenda Gagal 💀","Ulang total"]
+  ];
+  for(let i=0;i<levels.length;i++){if(wrong<=levels[i][0])return{level:levels[i][1],desc:levels[i][2]}}
+}
+
+function endTest(){
+  stopTimer();
+  const total=((Date.now()-startTime)/1000).toFixed(2);
+  const level=getLevel(correct,wrong);
+
+  if(wrong===0){
+    play("https://www.myinstants.com/media/sounds/angrybird-victory.mp3");
+  }else{
+    play("https://www.myinstants.com/media/sounds/long-brain-fart.mp3");
+  }
+
+  document.getElementById("box").innerHTML=`
+    <h2>Hasil Tes</h2>
+    <p>Benar: ${correct}</p>
+    <p>Salah: ${wrong}</p>
+    <p>Waktu: ${total} detik</p>
+    <p><b>Level:</b> ${level.level}</p>
+    <p>${level.desc}</p>
+    <p><b>Kesalahan:</b></p>
+    <p>${wrongList.length?wrongList.join('<br>'):'Tidak ada'}</p>
+  `;
+}
+
+// events
+
+document.getElementById("submitBtn").addEventListener("click",submitAnswer);
+document.getElementById("answer").addEventListener("keydown",e=>{if(e.key==='Enter')submitAnswer()});
+
+startTimer();
+loadQuestion();
+
+// tests
+console.assert(hiraganaList.length>=46,"Data hiragana harus lengkap!");
+console.assert(typeof handleStreakSound==='function',"Streak function error");
+
+});
+</script>
+</body>
+</html>
